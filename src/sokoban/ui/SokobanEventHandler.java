@@ -19,6 +19,7 @@ import properties_manager.PropertiesManager;
 import xml_utilities.InvalidXMLFileFormatException;
 import sokoban.file.SokobanFileLoader;
 import sokoban.game.SokobanGameStateManager;
+import java.io.File;
 
 public class SokobanEventHandler {
 
@@ -66,15 +67,16 @@ public class SokobanEventHandler {
         int SokobanIndex = SokobanLevels.indexOf(level);
         String SokobanDataFile = SokobanData.get(SokobanIndex);
         String SokobanFileLocation = "./data/" + SokobanDataFile;  
+        File fileToOpen = new File(SokobanFileLocation);
         //String SokobanSchema = props.getProperty(SokobanPropertyType.PROPERTIES_SCHEMA_FILE_NAME);
         try {
-                if (SokobanDataFile != null) {
+                if (fileToOpen != null) {
                     // LET'S USE A FAST LOADING TECHNIQUE. WE'LL LOAD ALL OF THE
                     // BYTES AT ONCE INTO A BYTE ARRAY, AND THEN PICK THAT APART.
                     // THIS IS FAST BECAUSE IT ONLY HAS TO DO FILE READING ONCE
-                    byte[] bytes = new byte[Long.valueOf(SokobanFileLocation.length()).intValue()];
+                    byte[] bytes = new byte[Long.valueOf(fileToOpen.length()).intValue()];
                     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-                    FileInputStream fis = new FileInputStream(SokobanDataFile);
+                    FileInputStream fis = new FileInputStream(fileToOpen);
                     BufferedInputStream bis = new BufferedInputStream(fis);
 
                     // HERE IT IS, THE ONLY READY REQUEST WE NEED
@@ -97,12 +99,10 @@ public class SokobanEventHandler {
                             newGrid[i][j] = dis.readInt();
                         }
                     }
-
                     ui.grid = newGrid;
                     ui.gridColumns = initGridColumns;
                     ui.gridRows = initGridRows;
                     ui.gridRenderer.repaint();
-                    
                     ui.initSokobanUI();
                 }
             } catch (Exception e) {

@@ -113,12 +113,15 @@ public class SokobanUI extends Pane {
     private SokobanDocumentManager docManager;
 
     SokobanGameStateManager gsm;
-    GridRenderer gridRenderer;
+    GridRenderer gridRenderer = new GridRenderer();
     GraphicsContext gc;
 
     int gridColumns;
     int gridRows;
     int grid[][];
+    
+    int SokobanXCoordinate;
+    int SokobanYCoordinate;
     /**
      * This class renders the grid for us. Note that we also listen for mouse
      * clicks on it.
@@ -155,7 +158,7 @@ public class SokobanUI extends Pane {
             gc = this.getGraphicsContext2D();
 
             // NOW RENDER EACH CELL
-            int x = 0, y = 0;
+            double x = 0, y = 0;
             for (int i = 0; i < gridColumns; i++) {
                 y = 0;
                 for (int j = 0; j < gridRows; j++) {
@@ -276,7 +279,7 @@ public class SokobanUI extends Pane {
                 .getPropertyOptionsList(SokobanPropertyType.LEVEL_FILES);
 
         levelSelectionPane = new HBox();
-        levelSelectionPane.setSpacing(10.0);
+        levelSelectionPane.setSpacing(0.0);
         levelSelectionPane.setAlignment(Pos.CENTER);
         // add key listener
         levelButtons = new ArrayList<Button>();
@@ -289,7 +292,7 @@ public class SokobanUI extends Pane {
             ImageView levelImageView = new ImageView(levelImage);
 
             // AND BUILD THE BUTTON
-            Button levelButton = new Button();
+            Button levelButton = new Button(level);
             levelButton.setGraphic(levelImageView);
             
             // CONNECT THE BUTTON TO THE EVENT HANDLER
@@ -324,6 +327,8 @@ public class SokobanUI extends Pane {
         String title = props.getProperty(SokobanPropertyType.GAME_TITLE_TEXT);
         primaryStage.setTitle(title);
 
+        // THIS GUY RENDERS OUR GRID
+        gridRenderer = new GridRenderer();
         // THEN ADD ALL THE STUFF WE MIGHT NOW USE
         initNorthToolbar();
 
@@ -335,9 +340,25 @@ public class SokobanUI extends Pane {
         //initHelpPane();
 
         // WE'LL START OUT WITH THE GAME SCREEN
-        changeWorkspace(SokobanUIState.PLAY_GAME_STATE);
+        //changeWorkspace(SokobanUIState.PLAY_GAME_STATE);
 
     }
+    
+    /**
+     * This function finds Sokoban Character
+     */
+    
+    private void findSokoban(){
+        for (int i = 0; i < gridColumns; i++) {
+                        for (int j = 0; j < gridRows; j++) {
+                            if(grid[i][j] == 4){
+                                SokobanXCoordinate = i;
+                                SokobanYCoordinate = j;
+                            }
+            }
+        }
+    }
+    
 
     /**
      * This function initializes all the controls that go in the north toolbar.
@@ -409,6 +430,10 @@ public class SokobanUI extends Pane {
         });
 
         // AND NOW PUT THE NORTH TOOLBAR IN THE FRAME
+        gameButton.setFocusTraversable(false);
+        statsButton.setFocusTraversable(false);
+        helpButton.setFocusTraversable(false);
+        exitButton.setFocusTraversable(false);
         mainPane.setTop(northToolbar);
         //mainPane.getChildren().add(northToolbar);
     }
@@ -453,7 +478,31 @@ public class SokobanUI extends Pane {
         // THE WORKSPACE WILL GO IN THE CENTER OF THE WINDOW, UNDER THE NORTH
         // TOOLBAR
         workspace = new Pane();
-        mainPane.setCenter(workspace);
+        mainPane.setCenter(gridRenderer);
+        gridRenderer.setFocusTraversable(true);
+        gridRenderer.setOnKeyPressed(e -> {
+            findSokoban();
+            switch (e.getCode()){
+                case DOWN:  
+                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 0){ // Checks to see if the space below is empty
+                       grid[SokobanXCoordinate][SokobanYCoordinate] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanXCoordinate + 1][SokobanYCoordinate] = 4; // Move Sokoban to new location
+                   }
+                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 1){
+                   }
+                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 2){
+                       if(grid[SokobanXCoordinate + 2][SokobanYCoordinate] == 1){
+                           
+                       }
+                   }
+                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 3){
+                   }
+                case UP:
+                case LEFT:
+                case RIGHT:
+                default:
+            }
+        });
         //mainPane.getChildren().add(workspace);
         System.out.println("in the initWorkspace");
     }
