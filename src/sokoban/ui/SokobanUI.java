@@ -120,8 +120,8 @@ public class SokobanUI extends Pane {
     int gridRows;
     int grid[][];
     
-    int SokobanXCoordinate;
-    int SokobanYCoordinate;
+    int SokobanRow;
+    int SokobanColumn;
     /**
      * This class renders the grid for us. Note that we also listen for mouse
      * clicks on it.
@@ -352,8 +352,8 @@ public class SokobanUI extends Pane {
         for (int i = 0; i < gridColumns; i++) {
                         for (int j = 0; j < gridRows; j++) {
                             if(grid[i][j] == 4){
-                                SokobanXCoordinate = i;
-                                SokobanYCoordinate = j;
+                                SokobanColumn = i;
+                                SokobanRow = j;
                             }
             }
         }
@@ -481,21 +481,27 @@ public class SokobanUI extends Pane {
         mainPane.setCenter(gridRenderer);
         gridRenderer.setFocusTraversable(true);
         gridRenderer.setOnKeyPressed(e -> {
-            findSokoban();
             switch (e.getCode()){
-                case DOWN:  
-                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 0){ // Checks to see if the space below is empty
-                       grid[SokobanXCoordinate][SokobanYCoordinate] = 0; // Change Sokoban's old location to empty space
-                       grid[SokobanXCoordinate + 1][SokobanYCoordinate] = 4; // Move Sokoban to new location
+                case DOWN:
+                   findSokoban();
+                   System.out.println(SokobanColumn);
+                   System.out.println(SokobanRow);
+                   if(grid[SokobanColumn][SokobanRow + 1] == 0){ // Checks to see if the space below is empty
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
+        
                    }
-                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 1){
+                   if(grid[SokobanColumn][SokobanRow + 1] == 2){ // Checks to see if the space below is a box
+                       if(grid[SokobanColumn][SokobanRow + 2] == 0 || grid[SokobanColumn][SokobanRow + 2] == 3){ // Only moves if the space below the box is empty or red square
+                           grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn][SokobanRow + 2] = 2; // Move the box to the new location
+                           System.out.println(SokobanColumn);
+                           System.out.println(SokobanRow);
+                           gridRenderer.repaint();
                    }
-                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 2){
-                       if(grid[SokobanXCoordinate + 2][SokobanYCoordinate] == 1){
-                           
-                       }
                    }
-                   if(grid[SokobanXCoordinate + 1][SokobanYCoordinate] == 3){
+                   if(grid[SokobanColumn + 1][SokobanRow] == 3){
                    }
                 case UP:
                 case LEFT:
