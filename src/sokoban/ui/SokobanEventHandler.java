@@ -102,7 +102,7 @@ public class SokobanEventHandler {
                     ui.grid = newGrid;
                     ui.gridColumns = initGridColumns;
                     ui.gridRows = initGridRows;
-                    ui.gridRenderer.repaint();
+                    ui.gridCopy= new int[ui.gridColumns][ui.gridRows];
                     ui.initSokobanUI();
                 }
             } catch (Exception e) {

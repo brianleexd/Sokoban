@@ -43,7 +43,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javax.swing.JScrollPane;
-
+import javafx.scene.layout.StackPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 
 public class SokobanUI extends Pane {
 
@@ -116,12 +119,29 @@ public class SokobanUI extends Pane {
     GridRenderer gridRenderer = new GridRenderer();
     GraphicsContext gc;
 
+    
     int gridColumns;
     int gridRows;
     int grid[][];
+    int gridCopy[][];
+    int savedGrid[][];
     
     int SokobanRow;
     int SokobanColumn;
+    
+    int amountOfRedSquares;
+    
+    java.util.ArrayList<int[][]> list;
+    int amountOfGames;
+    int amountOfWins;
+    int amountOfLosses;
+    double winningPercentage;
+    
+    public void setWinningPercentage(){
+        if(amountOfWins != 0){
+        winningPercentage = ((double)(amountOfWins) / (double)(amountOfWins + amountOfLosses)) * 100;
+        }
+    }
     /**
      * This class renders the grid for us. Note that we also listen for mouse
      * clicks on it.
@@ -191,7 +211,7 @@ public class SokobanUI extends Pane {
                     x += xInc;
                     y += yInc;
                     gc.setFill(Color.RED);
-                    gc.fillText(numToDraw, x, y);
+                    //gc.fillText(numToDraw, x, y);
                     x -= xInc;
                     y -= yInc;
 
@@ -294,6 +314,8 @@ public class SokobanUI extends Pane {
             // AND BUILD THE BUTTON
             Button levelButton = new Button(level);
             levelButton.setGraphic(levelImageView);
+            levelImageView.setFitHeight(100);
+            levelImageView.setFitWidth(100);
             
             // CONNECT THE BUTTON TO THE EVENT HANDLER
             levelButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -301,6 +323,7 @@ public class SokobanUI extends Pane {
                 @Override
                 public void handle(ActionEvent event) {
                     // TODO
+                    amountOfGames++;
                     eventHandler.respondToSelectLevelRequest(level);
                 }
             });
@@ -321,13 +344,14 @@ public class SokobanUI extends Pane {
     public void initSokobanUI() {
         // FIRST REMOVE THE SPLASH SCREEN
         mainPane.getChildren().clear();
-
         // GET THE UPDATED TITLE
         PropertiesManager props = PropertiesManager.getPropertiesManager();
         String title = props.getProperty(SokobanPropertyType.GAME_TITLE_TEXT);
         primaryStage.setTitle(title);
-
         // THIS GUY RENDERS OUR GRID
+        copyInitialGrid();
+        java.util.ArrayList<int[][]> moveList = new java.util.ArrayList<int[][]>();
+        list = moveList;
         gridRenderer = new GridRenderer();
         // THEN ADD ALL THE STUFF WE MIGHT NOW USE
         initNorthToolbar();
@@ -348,6 +372,55 @@ public class SokobanUI extends Pane {
      * This function finds Sokoban Character
      */
     
+    public void initStatsPane(){
+        HBox storeStats = new HBox();
+        String strAmountOfGames = Integer.toString(amountOfGames);
+        String games = "Amount of Games Played: ";
+        Button gameButton = new Button(games + strAmountOfGames);
+        String wins = "Amount of Wins: ";
+        String strAmountOfWins = Integer.toString(amountOfWins);
+        Button winButton = new Button(wins + strAmountOfWins);
+        String losses ="Amount of Losses: ";
+        String strAmountOfLosses = Integer.toString(amountOfLosses);
+        Button loseButton = new Button(losses + strAmountOfLosses);
+        setWinningPercentage();
+        String strWinningPercentage = Double.toString(winningPercentage);
+        String winningPercentages = "Winning Percentage: ";
+        Button percentageButton = new Button(winningPercentages + strWinningPercentage + "%");
+        storeStats.getChildren().add(gameButton);
+        storeStats.getChildren().add(winButton);
+        storeStats.getChildren().add(loseButton);
+        storeStats.getChildren().add(percentageButton);
+        mainPane.setCenter(storeStats);
+    }
+    public void winPane(){
+        HBox winSelectionPane = new HBox();
+        winSelectionPane.setSpacing(0.0);
+        winSelectionPane.setAlignment(Pos.CENTER);
+        Image winImage = loadImage("Untitled1.png");
+        ImageView winImageView = new ImageView(winImage);
+        Button winButton = new Button();
+        winButton.setGraphic(winImageView);
+        winButton.setFocusTraversable(false);
+            //winImageView.setFitHeight(100);
+            //winImageView.setFitWidth(100);
+        winSelectionPane.getChildren().add(winButton);
+        mainPane.setLeft(winSelectionPane);
+    }
+    public void losePane(){
+        HBox loseSelectionPane = new HBox();
+        loseSelectionPane.setSpacing(0.0);
+        loseSelectionPane.setAlignment(Pos.CENTER);
+        Image loseImage = loadImage("Untitled2.png");
+        ImageView loseImageView = new ImageView(loseImage);
+        Button loseButton = new Button();
+        loseButton.setGraphic(loseImageView);
+        loseButton.setFocusTraversable(false);
+            //loseImageView.setFitHeight(100);
+            //loseImageView.setFitWidth(100);
+        loseSelectionPane.getChildren().add(loseButton);
+        mainPane.setLeft(loseSelectionPane);
+    }
     private void findSokoban(){
         for (int i = 0; i < gridColumns; i++) {
                         for (int j = 0; j < gridRows; j++) {
@@ -359,7 +432,107 @@ public class SokobanUI extends Pane {
         }
     }
     
-
+    /**
+     * This function counts the red squares
+     */
+    
+    private void countRedSquares(){
+        int counter = 0;
+        for (int i = 0; i < gridColumns; i++) {
+                        for (int j = 0; j < gridRows; j++) {
+                            if(grid[i][j] == 3){
+                                counter++;
+                            }
+            }
+        }
+        amountOfRedSquares = counter;
+    }
+    
+    private void winGameCheckDown(){
+        countRedSquares();
+        if(amountOfRedSquares == 0 && gridCopy[SokobanColumn][SokobanRow + 1] != 3){
+            amountOfWins++;
+            System.out.println("WINTEST DOWN");
+            winPane();
+        }
+    }
+    private void winGameCheckUp(){
+        countRedSquares();
+        if(amountOfRedSquares == 0 && gridCopy[SokobanColumn][SokobanRow - 1] != 3){
+            amountOfWins++;
+            System.out.println("WINTEST UP");
+            winPane();
+        }
+    }
+    private void winGameCheckLeft(){
+        countRedSquares();
+        if(amountOfRedSquares == 0 && gridCopy[SokobanColumn - 1][SokobanRow] != 3){
+            amountOfWins++;
+            System.out.println("WINTEST LEFT");
+            winPane();
+        }
+    }
+    private void winGameCheckRight(){
+        countRedSquares();
+        if(amountOfRedSquares == 0 && gridCopy[SokobanColumn + 1][SokobanRow] != 3){
+            amountOfWins++;
+            System.out.println("WINTEST RIGHT");
+            winPane();
+        }
+    }
+    private void loseGameCheckDown(){
+        if((grid[SokobanColumn][SokobanRow + 3] == 1 && grid[SokobanColumn + 1][SokobanRow + 2] == 1 && gridCopy[SokobanColumn][SokobanRow + 2] != 3)
+            || (grid[SokobanColumn][SokobanRow + 3] == 1 && grid[SokobanColumn - 1][SokobanRow + 2] == 1 && gridCopy[SokobanColumn][SokobanRow + 2] != 3)){
+            amountOfLosses++;
+        System.out.println("LOSETEST DOWN");
+        losePane();
+        }
+    }
+    private void loseGameCheckUp(){
+        if((grid[SokobanColumn][SokobanRow - 3] == 1 && grid[SokobanColumn - 1][SokobanRow - 2] == 1 && gridCopy[SokobanColumn][SokobanRow - 2] != 3)
+            || (grid[SokobanColumn][SokobanRow - 3] == 1 && grid[SokobanColumn + 1][SokobanRow - 2] == 1 && gridCopy[SokobanColumn][SokobanRow - 2] != 3)){
+            amountOfLosses++;
+        System.out.println("LOSETEST UP");
+        losePane();
+        }
+    }
+    private void loseGameCheckLeft(){
+        if((grid[SokobanColumn - 3][SokobanRow] == 1 && grid[SokobanColumn - 2][SokobanRow + 1 ] == 1 && gridCopy[SokobanColumn - 2][SokobanRow] != 3 )
+            || (grid[SokobanColumn - 3][SokobanRow] == 1 && grid[SokobanColumn - 2][SokobanRow - 1] == 1 && gridCopy[SokobanColumn - 2][SokobanRow] != 3 )){
+            amountOfLosses++;
+        System.out.println("LOSETEST LEFT");
+        losePane();
+        }
+    }
+    private void loseGameCheckRight(){
+        if((grid[SokobanColumn + 3][SokobanRow] == 1 && grid[SokobanColumn + 2][SokobanRow + 1] == 1 && gridCopy[SokobanColumn + 2][SokobanRow] != 3 )
+            || (grid[SokobanColumn + 3][SokobanRow] == 1 && grid[SokobanColumn + 2][SokobanRow - 1] == 1 && gridCopy[SokobanColumn + 2][SokobanRow] != 3 )){
+            amountOfLosses++;
+        System.out.println("LOSETEST RIGHT");
+        losePane();
+        }
+    }
+     /**
+     * This function counts the red squares
+     */
+    
+    public void copyInitialGrid(){
+        for (int i = 0; i < gridColumns; i++) {
+                        for (int j = 0; j < gridRows; j++) {
+                            gridCopy[i][j] = grid[i][j];
+                        }
+    }
+    }
+    
+    public int[][] copyGrid(){
+        int[][] tempGrid = new int[gridColumns][gridRows];
+        for (int i = 0; i < gridColumns; i++) {
+                        for (int j = 0; j < gridRows; j++) {
+                            tempGrid[i][j] = grid[i][j];
+                        }
+    }
+        return tempGrid;
+    }
     /**
      * This function initializes all the controls that go in the north toolbar.
      */
@@ -371,6 +544,12 @@ public class SokobanUI extends Pane {
         northToolbar.setPadding(marginlessInsets);
         northToolbar.setSpacing(10.0);
 
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        props.addProperty(SokobanPropertyType.GAME_IMG_NAME, "Back.png");
+        props.addProperty(SokobanPropertyType.STATS_IMG_NAME, "Stats.png");
+        props.addProperty(SokobanPropertyType.HELP_IMG_NAME, "Help.png");
+        props.addProperty(SokobanPropertyType.EXIT_IMG_NAME, "Exit.png");
+        
         // MAKE AND INIT THE GAME BUTTON
         gameButton = initToolbarButton(northToolbar,
                 SokobanPropertyType.GAME_IMG_NAME);
@@ -380,8 +559,8 @@ public class SokobanUI extends Pane {
             @Override
             public void handle(ActionEvent event) {
                 // TODO Auto-generated method stub
-                eventHandler
-                        .respondToSwitchScreenRequest(SokobanUIState.PLAY_GAME_STATE);
+                mainPane.getChildren().clear();
+                initSplashScreen();
             }
         });
 
@@ -395,8 +574,8 @@ public class SokobanUI extends Pane {
             @Override
             public void handle(ActionEvent event) {
                 // TODO Auto-generated method stub
-                eventHandler
-                        .respondToSwitchScreenRequest(SokobanUIState.VIEW_STATS_STATE);
+
+                    initStatsPane();
             }
 
         });
@@ -409,8 +588,11 @@ public class SokobanUI extends Pane {
             @Override
             public void handle(ActionEvent event) {
                 // TODO Auto-generated method stub
-                eventHandler
-                        .respondToSwitchScreenRequest(SokobanUIState.VIEW_HELP_STATE);
+                if(list.isEmpty() != true){
+                        grid = list.get(list.size() - 1);
+                        list.remove(list.size() - 1);
+                        gridRenderer.repaint();
+                    }
             }
 
         });
@@ -478,37 +660,228 @@ public class SokobanUI extends Pane {
         // THE WORKSPACE WILL GO IN THE CENTER OF THE WINDOW, UNDER THE NORTH
         // TOOLBAR
         workspace = new Pane();
+        //Media media = new Media("move.wav");
+        //MediaPlayer moveSound = new MediaPlayer(media);
+
         mainPane.setCenter(gridRenderer);
         gridRenderer.setFocusTraversable(true);
         gridRenderer.setOnKeyPressed(e -> {
             switch (e.getCode()){
                 case DOWN:
                    findSokoban();
-                   System.out.println(SokobanColumn);
-                   System.out.println(SokobanRow);
                    if(grid[SokobanColumn][SokobanRow + 1] == 0){ // Checks to see if the space below is empty
+                       savedGrid = copyGrid();
+                       list.add(savedGrid);
+                       if(gridCopy[SokobanColumn][SokobanRow] == 3){ // Checks to see if Sokoban is standing on a red space
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to a red square
+                           grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
+                           //moveSound.play();
+                           gridRenderer.repaint();
+                       } else {
                        grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
                        grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
-        
+                       //moveSound.play();
+                       gridRenderer.repaint();
                    }
+                   }
+                   
                    if(grid[SokobanColumn][SokobanRow + 1] == 2){ // Checks to see if the space below is a box
                        if(grid[SokobanColumn][SokobanRow + 2] == 0 || grid[SokobanColumn][SokobanRow + 2] == 3){ // Only moves if the space below the box is empty or red square
+                           savedGrid = copyGrid();
+                           list.add(savedGrid);
+                           if(gridCopy[SokobanColumn][SokobanRow] == 3){ // Checks to see if Sokoban is standing on a red space
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to a red square
+                           grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn][SokobanRow + 2] = 2; // Move the box to the new location
+                           winGameCheckDown();
+                           loseGameCheckDown();
+                           gridRenderer.repaint();
+                       } else {
                            grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
                            grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
                            grid[SokobanColumn][SokobanRow + 2] = 2; // Move the box to the new location
-                           System.out.println(SokobanColumn);
-                           System.out.println(SokobanRow);
+                           winGameCheckDown();
+                           loseGameCheckDown();
                            gridRenderer.repaint();
                    }
                    }
-                   if(grid[SokobanColumn + 1][SokobanRow] == 3){
                    }
+                   if(grid[SokobanColumn][SokobanRow + 1] == 3){
+                       savedGrid = copyGrid();
+                       list.add(savedGrid);
+                       if(gridCopy[SokobanColumn][SokobanRow] == 3){ // Checks to see if Sokoban is standing on a red square
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to red space
+                           grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn][SokobanRow + 1] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   }
+                   }
+                   break;
                 case UP:
+                    findSokoban();
+                    if(grid[SokobanColumn][SokobanRow - 1] == 0){ // Checks to see if the space above is empty
+                        savedGrid = copyGrid();
+                        list.add(savedGrid);
+                        if(gridCopy[SokobanColumn][SokobanRow] == 3){
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn][SokobanRow - 1] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn][SokobanRow - 1] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   }
+                   }
+                   if(grid[SokobanColumn][SokobanRow - 1] == 2){ // Checks to see if the space above is a box
+                       if(grid[SokobanColumn][SokobanRow - 2] == 0 || grid[SokobanColumn][SokobanRow - 2] == 3){ // Only moves if the space below the box is empty or red square
+                           savedGrid = copyGrid();
+                           list.add(savedGrid);
+                           if(gridCopy[SokobanColumn][SokobanRow] == 3){ // Checks to see if Sokoban is standing on a red space
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to a red square
+                           grid[SokobanColumn][SokobanRow - 1] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn][SokobanRow - 2] = 2; // Move the box to the new location
+                           winGameCheckUp();
+                           loseGameCheckUp();
+                           gridRenderer.repaint();
+                       } else {
+                           grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn][SokobanRow - 1] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn][SokobanRow - 2] = 2; // Move the box to the new location
+                           winGameCheckUp();
+                           loseGameCheckUp();
+                           gridRenderer.repaint();
+                   }
+                   }
+                   }
+                   if(grid[SokobanColumn][SokobanRow - 1] == 3){
+                       savedGrid = copyGrid();
+                       list.add(savedGrid);
+                       if(gridCopy[SokobanColumn][SokobanRow] == 3){
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn][SokobanRow - 1] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn][SokobanRow - 1] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   
+                   }
+                   }
+                break;
                 case LEFT:
+                    findSokoban();
+                    if(grid[SokobanColumn - 1][SokobanRow] == 0){ // Checks to see if the space to the left is empty
+                        savedGrid = copyGrid();
+                        list.add(savedGrid);
+                        if(gridCopy[SokobanColumn][SokobanRow] == 3){
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn - 1][SokobanRow] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn - 1][SokobanRow] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   }
+                   }
+                   if(grid[SokobanColumn - 1][SokobanRow] == 2){ // Checks to see if the space to the left is a box
+                       if(grid[SokobanColumn - 2][SokobanRow] == 0 || grid[SokobanColumn - 2][SokobanRow] == 3){ // Only moves if the space to the left of the box is empty or red square
+                           savedGrid = copyGrid();
+                           list.add(savedGrid);
+                           if(gridCopy[SokobanColumn][SokobanRow] == 3){ // Checks to see if Sokoban is standing on a red space
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to a red square
+                           grid[SokobanColumn - 1][SokobanRow] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn - 2][SokobanRow] = 2; // Move the box to the new location
+                           winGameCheckLeft();
+                           loseGameCheckLeft();
+                           gridRenderer.repaint();
+                       } else {
+                           grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn - 1][SokobanRow] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn - 2][SokobanRow] = 2; // Move the box to the new location
+                           winGameCheckLeft();
+                           loseGameCheckLeft();
+                           gridRenderer.repaint();
+                   }
+                   }
+                   }
+                   if(grid[SokobanColumn - 1][SokobanRow] == 3){
+                       savedGrid = copyGrid();
+                       list.add(savedGrid);
+                       if(gridCopy[SokobanColumn][SokobanRow] == 3){
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn - 1][SokobanRow] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn - 1][SokobanRow] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   
+                   }
+                   }
+                break;
                 case RIGHT:
+                    findSokoban(); 
+                    if(grid[SokobanColumn + 1][SokobanRow] == 0){ // Checks to see if the space to the left is empty
+                        savedGrid = copyGrid();
+                        list.add(savedGrid);
+                        if(gridCopy[SokobanColumn][SokobanRow] == 3){
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn + 1][SokobanRow] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn + 1][SokobanRow] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   }}
+                   
+                   if(grid[SokobanColumn + 1][SokobanRow] == 2){ // Checks to see if the space to the left is a box
+                       if(grid[SokobanColumn + 2][SokobanRow] == 0 || grid[SokobanColumn + 2][SokobanRow] == 3){ // Only moves if the space to the left of the box is empty or red square
+                           savedGrid = copyGrid();
+                           list.add(savedGrid);
+                           if(gridCopy[SokobanColumn][SokobanRow] == 3){ // Checks to see if Sokoban is standing on a red space
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to a red square
+                           grid[SokobanColumn + 1][SokobanRow] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn + 2][SokobanRow] = 2; // Move the box to the new location
+                           winGameCheckRight();
+                           loseGameCheckRight();
+                           gridRenderer.repaint();
+                       } else {
+                           grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn + 1][SokobanRow] = 4; // Move Sokoban to new location
+                           grid[SokobanColumn + 2][SokobanRow] = 2; // Move the box to the new location
+                           winGameCheckRight();
+                           loseGameCheckRight();
+                           gridRenderer.repaint();
+                   }
+                   }
+                   }
+                   if(grid[SokobanColumn + 1][SokobanRow] == 3){
+                       savedGrid = copyGrid();
+                       list.add(savedGrid);
+                       if(gridCopy[SokobanColumn][SokobanRow] == 3){
+                           grid[SokobanColumn][SokobanRow] = 3; // Change Sokoban's old location to empty space
+                           grid[SokobanColumn + 1][SokobanRow] = 4; // Move Sokoban to new location
+                           gridRenderer.repaint();
+                       } else {
+                       grid[SokobanColumn][SokobanRow] = 0; // Change Sokoban's old location to empty space
+                       grid[SokobanColumn + 1][SokobanRow] = 4; // Move Sokoban to new location
+                       gridRenderer.repaint();
+                   }
+                   }
+                break;
+                case U:
+                    if(list.isEmpty() != true){
+                        grid = list.get(list.size() - 1);
+                        list.remove(list.size() - 1);
+                        gridRenderer.repaint();
+                    }
+                break;
                 default:
             }
-        });
+});
         //mainPane.getChildren().add(workspace);
         System.out.println("in the initWorkspace");
     }
