@@ -5,7 +5,7 @@
 -->
 <properties>
     <property_list>    
-        <property name="SPLASH_SCREEN_TITLE_TEXT"   value="Select a Level"></property>
+        <property name="SPLASH_SCREEN_TITLE_TEXT"   value="Sokoban"></property>
         <property name="WINDOW_WIDTH"               value="820"></property>
         <property name="WINDOW_HEIGHT"              value="820"></property>
         <property name="SPLASH_SCREEN_IMAGE_NAME"   value="SokobanSplashScreen.png"></property>
