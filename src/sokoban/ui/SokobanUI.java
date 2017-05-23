@@ -313,6 +313,7 @@ public class SokobanUI extends Pane {
                     // TODO
                     amountOfGames++;
                     eventHandler.respondToSelectLevelRequest(level);
+                    gsm.setCurrentGameState = GAME_IN_PROGRESS;
                 }
             });
             // TODO
@@ -527,7 +528,11 @@ public class SokobanUI extends Pane {
         northToolbar.setSpacing(10.0);
 
         PropertiesManager props = PropertiesManager.getPropertiesManager();
+        if(gsm.isGameInProgress() == true){
         props.addProperty(SokobanPropertyType.GAME_IMG_NAME, "Back.png");
+        } else {
+        props.addProperty(SokobanPropertyType.RESUME_IMG_NAME, "Resume.png");
+        }
         props.addProperty(SokobanPropertyType.STATS_IMG_NAME, "Stats.png");
         props.addProperty(SokobanPropertyType.HELP_IMG_NAME, "Help.png");
         props.addProperty(SokobanPropertyType.EXIT_IMG_NAME, "Exit.png");

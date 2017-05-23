@@ -22,7 +22,7 @@ public class SokobanGameStateManager {
     }
 
     // STORES THE CURRENT STATE OF THIS GAME
-    private SokobanGameState currentGameState;
+    public SokobanGameState currentGameState;
 
     // WHEN THE STATE OF THE GAME CHANGES IT WILL NEED TO BE
     // REFLECTED IN THE USER INTERFACE, SO THIS CLASS NEEDS
@@ -163,6 +163,7 @@ public class SokobanGameStateManager {
      * @return The completed game that the player won requiring the least amount
      * of time.
      */
+    
     public SokobanGameData getFastestWin() {
         // IF NO GAMES HAVE BEEN PLAYED, THERE IS
         // NOTHING TO RETURN
